@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trix Work</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M8 9h16v4h-6v10h-4V13H8z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#000;
+  --text:#1d1f23;
+  --mute:#7a7f87;
+  --line:#e4e6ea;
+  --soft:#f5f6f7;
+  --bg:#fff;
+  --err:#b42318;
+  --sans:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:20px clamp(20px,5vw,48px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em;color:var(--ink)}
+.brand svg{display:block}
+.key{width:150px;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:13px;transition:border-color .15s}
+.key::placeholder{color:var(--mute)}
+.key:hover,.key:focus{border-color:#b9bdc4;outline:none}
+
+main{width:100%;max-width:600px;margin:0 auto;padding:clamp(32px,9vh,88px) 20px 64px}
+.view{display:none}
+.view.on{display:block}
+
+.drop{display:flex;flex-direction:column;justify-content:center;gap:4px;width:100%;min-height:148px;padding:28px;border:1px dashed #c3c7ce;border-radius:14px;background:var(--bg);text-align:left;transition:background .15s,border-color .15s}
+.drop:hover,.drop.over{background:var(--soft);border-color:var(--ink)}
+.drop .t{font-size:19px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.drop .s{font-size:13px;color:var(--mute);font-family:var(--mono)}
+.drop.has{border-style:solid;border-color:var(--ink)}
+
+.targets{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:20px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.targets button{height:46px;border:0;border-right:1px solid var(--line);background:var(--bg);font-weight:500;font-size:14px;transition:background .15s,color .15s}
+.targets button:last-child{border-right:0}
+.targets button:hover{background:var(--soft)}
+.targets button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;height:50px;padding:0 28px;border:1px solid var(--ink);border-radius:12px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;transition:opacity .15s,background .15s}
+.btn:hover{opacity:.86}
+.btn:disabled{background:#d9dce1;border-color:#d9dce1;color:#fff;cursor:not-allowed;opacity:1}
+.btn.ghost{background:var(--bg);color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--soft);opacity:1}
+.btn.full{width:100%;margin-top:20px}
+
+.pct{font-size:clamp(64px,16vw,104px);font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.pct small{font-size:.4em;font-weight:600;letter-spacing:0;margin-left:4px;color:var(--mute)}
+.stage{margin-top:16px;font-size:19px;font-weight:600;color:var(--ink)}
+.track{height:4px;margin-top:28px;background:var(--line);border-radius:2px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--ink);transition:width .6s ease}
+.msg{margin-top:14px;min-height:20px;font:400 12.5px/1.5 var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.h{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:0}
+.h.bad{color:var(--err)}
+.file{margin-top:8px;font:400 13px/1.5 var(--mono);color:var(--mute);word-break:break-all}
+.row{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.row .btn{height:44px;padding:0 20px;font-size:14px}
+
+.err{margin-top:24px;max-height:380px;overflow:auto;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font:400 12.5px/1.6 var(--mono);color:var(--text);white-space:pre-wrap;word-break:break-word}
+
+@media (max-width:520px){
+  .targets{grid-template-columns:repeat(3,1fr)}
+  .targets button{border-bottom:1px solid var(--line)}
+  .targets button:nth-child(3){border-right:0}
+  .targets button:nth-child(n+4){border-bottom:0}
+  .key{width:110px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#000"/><path d="M8 9h16v4h-6v10h-4V13H8z" fill="#fff"/></svg>
+    <span>Trix Work</span>
+  </div>
+  <input id="key" class="key" type="password" placeholder="Clave" autocomplete="off" aria-label="Clave">
+</header>
+
+<main>
+  <section id="v-setup" class="view on">
+    <button id="drop" class="drop" type="button">
+      <span class="t" id="dropT">Seleccionar ZIP</span>
+      <span class="s" id="dropS">o arrastrar aqui</span>
+    </button>
+    <input id="file" type="file" accept=".zip,application/zip" hidden>
+    <div class="targets" id="targets" role="group" aria-label="Destino"></div>
+    <button id="go" class="btn full" type="button" disabled>Compilar</button>
+  </section>
+
+  <section id="v-run" class="view">
+    <div class="pct"><span id="pct">0</span><small>%</small></div>
+    <div class="stage" id="stage">Subiendo</div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section id="v-done" class="view">
+    <h1 class="h">Compilacion completada</h1>
+    <div class="file" id="doneName"></div>
+    <div class="row">
+      <button id="save" class="btn" type="button">Descargar</button>
+      <button class="btn ghost again" type="button">Nueva compilacion</button>
+    </div>
+  </section>
+
+  <section id="v-fail" class="view">
+    <h1 class="h bad">Compilacion fallida</h1>
+    <pre class="err" id="errText"></pre>
+    <div class="row">
+      <button id="copy" class="btn" type="button">Copiar errores</button>
+      <button class="btn ghost again" type="button">Nueva compilacion</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const CH = 3 * 1024 * 1024;
+  const API = "/.netlify/functions/";
+  const $ = (s) => document.querySelector(s);
+  const TARGETS = [
+    ["apk-debug", "APK Debug"],
+    ["apk-release", "APK Release"],
+    ["aab", "AAB"],
+    ["exe", "EXE"],
+    ["jar", "JAR"],
+  ];
+  let file = null, target = "apk-debug", busy = false, outBlob = null, outName = "";
+
+  const keyEl = $("#key");
+  keyEl.value = localStorage.getItem("trix.key") || "";
+  keyEl.addEventListener("input", () => localStorage.setItem("trix.key", keyEl.value));
+  const hdr = () => (keyEl.value ? { "x-access-key": keyEl.value } : {});
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const rid = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const fmt = (n) => (n < 1048576 ? (n / 1024).toFixed(0) + " KB" : (n / 1048576).toFixed(1) + " MB");
+
+  const view = (id) => {
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v.id === "v-" + id));
+  };
+
+  const tBox = $("#targets");
+  TARGETS.forEach(([id, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.dataset.t = id;
+    b.setAttribute("aria-pressed", id === target);
+    b.addEventListener("click", () => {
+      target = id;
+      tBox.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === id));
+    });
+    tBox.appendChild(b);
+  });
+
+  const drop = $("#drop"), input = $("#file"), go = $("#go");
+  const setFile = (f) => {
+    if (!f) return;
+    if (!/\.zip$/i.test(f.name)) { $("#dropS").textContent = "El archivo debe ser .zip"; return; }
+    file = f;
+    drop.classList.add("has");
+    $("#dropT").textContent = f.name;
+    $("#dropS").textContent = fmt(f.size);
+    go.disabled = false;
+  };
+  drop.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => setFile(input.files[0]));
+  ["dragenter", "dragover"].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (ev) => setFile(ev.dataTransfer.files[0]));
+
+  const progress = (p, stage, msg) => {
+    p = Math.max(0, Math.min(100, Math.round(p)));
+    $("#pct").textContent = p;
+    $("#fill").style.width = p + "%";
+    if (stage) $("#stage").textContent = stage;
+    $("#msg").textContent = msg || "";
+  };
+
+  const showFail = (text) => {
+    busy = false;
+    localStorage.removeItem("trix.job");
+    $("#errText").textContent = text || "Error desconocido";
+    view("fail");
+  };
+
+  async function post(url, body, headers) {
+    let last = "Error de red";
+    for (let n = 0; n < 4; n++) {
+      try {
+        const r = await fetch(url, { method: "POST", headers: { ...hdr(), ...headers }, body });
+        if (r.ok) return r;
+        if (r.status === 401) throw new Error("Clave incorrecta");
+        last = "Error " + r.status;
+      } catch (e) {
+        if (e.message === "Clave incorrecta") throw e;
+        last = e.message || last;
+      }
+      await sleep(1000 * (n + 1));
+    }
+    throw new Error(last);
+  }
+
+  async function compile() {
+    if (!file || busy) return;
+    busy = true;
+    const job = rid();
+    const chunks = Math.max(1, Math.ceil(file.size / CH));
+    view("run");
+    progress(0, "Subiendo", "");
+    try {
+      for (let i = 0; i < chunks; i++) {
+        await post(`${API}chunk?kind=src&job=${job}&i=${i}`, file.slice(i * CH, (i + 1) * CH), { "content-type": "application/octet-stream" });
+        progress(10 * (i + 1) / chunks, "Subiendo", `${i + 1} / ${chunks}`);
+      }
+      progress(10, "Iniciando", "");
+      const r = await fetch(API + "start", {
+        method: "POST",
+        headers: { ...hdr(), "content-type": "application/json" },
+        body: JSON.stringify({ job, chunks, target, name: file.name.replace(/\.zip$/i, "") }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.error || "Error al iniciar");
+      }
+      localStorage.setItem("trix.job", job);
+      await watch(job);
+    } catch (e) {
+      showFail(e.message);
+    }
+  }
+
+  async function watch(job) {
+    let miss = 0;
+    for (;;) {
+      let s;
+      try {
+        const r = await fetch(`${API}status?job=${job}`, { cache: "no-store" });
+        s = await r.json();
+        miss = 0;
+      } catch (e) {
+        if (++miss > 40) throw new Error("Sin conexion con el servidor");
+        await sleep(3000);
+        continue;
+      }
+      if (s.status === "failed") return showFail(s.errors);
+      if (s.status === "unknown") return showFail("Trabajo no encontrado");
+      if (s.status === "done") return finish(job, s);
+      progress(10 + (s.progress || 0) * 0.9, s.stage || "En cola", s.message || "");
+      await sleep(2000);
+    }
+  }
+
+  async function finish(job, s) {
+    progress(100, "Descargando resultado", "");
+    const parts = [];
+    for (let i = 0; i < s.outChunks; i++) {
+      let ok = false;
+      for (let n = 0; n < 4 && !ok; n++) {
+        try {
+          const r = await fetch(`${API}chunk?kind=out&job=${job}&i=${i}`, { cache: "no-store" });
+          if (r.ok) { parts.push(await r.blob()); ok = true; }
+        } catch (e) {}
+        if (!ok) await sleep(1000);
+      }
+      if (!ok) throw new Error("No se pudo descargar el resultado");
+      progress(100, "Descargando resultado", `${i + 1} / ${s.outChunks}`);
+    }
+    outBlob = new Blob(parts, { type: "application/octet-stream" });
+    outName = s.outName;
+    localStorage.removeItem("trix.job");
+    busy = false;
+    $("#doneName").textContent = `${outName}  ${fmt(outBlob.size)}`;
+    view("done");
+    save();
+  }
+
+  function save() {
+    if (!outBlob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(outBlob);
+    a.download = outName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  }
+
+  async function copy(text, btn) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) {
+      const t = document.createElement("textarea");
+      t.value = text;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand("copy");
+      t.remove();
+    }
+    btn.textContent = "Copiado";
+    setTimeout(() => (btn.textContent = "Copiar errores"), 1600);
+  }
+
+  const reset = () => {
+    file = null; outBlob = null; busy = false; input.value = "";
+    drop.classList.remove("has");
+    $("#dropT").textContent = "Seleccionar ZIP";
+    $("#dropS").textContent = "o arrastrar aqui";
+    go.disabled = true;
+    view("setup");
+  };
+
+  go.addEventListener("click", compile);
+  $("#save").addEventListener("click", save);
+  $("#copy").addEventListener("click", (e) => copy($("#errText").textContent, e.currentTarget));
+  document.querySelectorAll(".again").forEach((b) => b.addEventListener("click", reset));
+
+  const pending = localStorage.getItem("trix.job");
+  if (pending) {
+    busy = true;
+    view("run");
+    progress(10, "Reconectando", "");
+    watch(pending).catch((e) => showFail(e.message));
+  }
+})();
+</script>
+</body>
+</html>
