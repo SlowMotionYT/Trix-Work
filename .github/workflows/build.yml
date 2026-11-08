@@ -42,10 +42,15 @@ jobs:
           distribution: temurin
           java-version: ${{ inputs.target == 'jar' && '21' || '17' }}
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK
         if: contains(inputs.target, 'apk') || inputs.target == 'aab'
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Compilar
+        id: compilar
         env:
           PYTHONUTF8: "1"
           TRIX_SITE: ${{ inputs.site }}
@@ -55,3 +60,16 @@ jobs:
           TRIX_CHUNKS: ${{ inputs.chunks }}
           TRIX_NAME: ${{ inputs.name }}
         run: python .github/trix/trix.py
+
+      - name: Avisar fallo
+        if: failure() && steps.compilar.outcome == 'skipped'
+        shell: bash
+        env:
+          TRIX_SITE: ${{ inputs.site }}
+          TRIX_SECRET: ${{ secrets.BUILD_SECRET }}
+          TRIX_JOB: ${{ inputs.job }}
+        run: |
+          curl -sS -X POST "$TRIX_SITE/.netlify/functions/report" \
+            -H "content-type: application/json" \
+            -H "x-trix-secret: $TRIX_SECRET" \
+            -d "{\"job\":\"$TRIX_JOB\",\"status\":\"failed\",\"stage\":\"Error\",\"errors\":\"Fallo la preparacion del entorno en GitHub Actions. Abre la pestana Actions del repositorio y copia el error del paso en rojo.\",\"purgeSrc\":true}"
